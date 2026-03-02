@@ -46,6 +46,11 @@ body {
     max-width: none;
     aspect-ratio: 588 / 735;
   }
+
+  .controls #takePhoto {
+    width: 80vw;
+    max-width: 20rem;
+  }
 }
 
 /* countdown timer */
@@ -171,9 +176,11 @@ button:hover {
     transform: translateY(0) rotate(0deg) scale(1);
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     transform: translateY(-110vh) rotate(360deg) scale(0.5);
     opacity: 0;

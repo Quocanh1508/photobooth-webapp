@@ -57,13 +57,7 @@ p {
   align-items: center;
 }
 
-/* mobile */
-@media (max-width: 768px) {
-  #canvasContainer {
-    width: 80vw;
-    max-width: 90vw;
-  }
-}
+
 
 /* canvas */
 canvas {
@@ -132,12 +126,29 @@ button:hover {
 }
 
 /* individual sticker urls */
-.fish-btn { background-image: url("../Assets/fish-photobooth/finalpage/fishButton.png"); }
-.octopus-btn { background-image: url("../Assets/fish-photobooth/finalpage/octopusButton.png"); }
-.seaweed-btn { background-image: url("../Assets/fish-photobooth/finalpage/seaweedButton.png"); }
-.axolotl-btn { background-image: url("../Assets/fish-photobooth/finalpage/axolotlButton.png"); }
-.bubble-btn { background-image: url("../Assets/fish-photobooth/finalpage/bubbleButton.png"); }
-.reset-btn { background-image: url("../Assets/fish-photobooth/finalpage/resetButton.png"); }
+.fish-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/fishButton.png");
+}
+
+.octopus-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/octopusButton.png");
+}
+
+.seaweed-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/seaweedButton.png");
+}
+
+.axolotl-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/axolotlButton.png");
+}
+
+.bubble-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/bubbleButton.png");
+}
+
+.reset-btn {
+  background-image: url("../Assets/fish-photobooth/finalpage/resetButton.png");
+}
 
 /* heading content */
 .heading-content {
@@ -151,10 +162,27 @@ button:hover {
   padding: 0;
 }
 
-/* mobile heading */
+/* mobile responsive */
 @media (max-width: 768px) {
   .heading-content {
     width: 90vw;
+  }
+
+  #canvasContainer {
+    width: 80vw;
+    max-width: 90vw;
+  }
+
+  .sticker-btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 0 1rem;
+  }
+
+  .sticker-btn {
+    width: 100%;
+    aspect-ratio: 75/60;
   }
 }
 

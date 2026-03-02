@@ -215,6 +215,18 @@ button:hover {
 }
 
 @media screen and (max-width: 768px) {
+
+  .home-container,
+  .menu-container {
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  .menu-header {
+    width: 80vw;
+    max-width: 20rem;
+  }
+
   #select-button {
     width: 8rem;
     height: 3.2rem;
@@ -225,5 +237,11 @@ button:hover {
 
   button {
     font-size: 1.5rem;
+  }
+
+  #menu-camera-button,
+  #menu-upload-button {
+    width: 80vw;
+    max-width: 20rem;
   }
 }
