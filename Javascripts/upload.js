@@ -14,76 +14,97 @@ const elements = {
   readyBtn: document.getElementById('readyButton'),
 };
 
-let photoStage = 0; // 0 = first slot, 1 = second slot, 2 = done
+let photoStage = 0;
+let currentImg = null;
 
 // ── Crop tool state ───────────────────────────────────────────────
-let currentImg = null;
-let imgCX = 0;    // image center X in preview canvas coords
-let imgCY = 0;    // image center Y in preview canvas coords
-let imgScale = 1; // zoom level (1 = image just fills crop box width/height)
+// The image is drawn at a fixed scale to fill/fit the preview canvas.
+// The crop box is draggable over the image.
+let imgZoom = 1;    // zoom applied to the image (1 = fit to preview)
+let cropX, cropY;   // crop box top-left in preview canvas coords
+let cropW, cropH;   // crop box size (fixed aspect, adjusts with zoom)
+let imgDraw;        // { x, y, w, h } — where image is drawn in preview
+
 let isDragging = false;
-let lastTouch = null;
+let dragStart = null;
+let cropStart = null;
 let lastPinchDist = null;
 
-// Crop box rect (computed dynamically)
-let cropX, cropY, cropW, cropH;
-
-// Preview canvas
 const cropCanvas = document.getElementById('cropCanvas');
 const cCtx = cropCanvas.getContext('2d');
+const CW = cropCanvas.width, CH = cropCanvas.height;
+
+// ── Layout helpers ────────────────────────────────────────────────
+function computeImgDraw() {
+  // Scale image to fill the preview canvas (object-cover), then apply zoom
+  const imgAspect = currentImg.width / currentImg.height;
+  const canvasAspect = CW / CH;
+  let baseW, baseH;
+  if (imgAspect > canvasAspect) {
+    baseH = CH; baseW = CH * imgAspect;
+  } else {
+    baseW = CW; baseH = CW / imgAspect;
+  }
+  const dw = baseW * imgZoom;
+  const dh = baseH * imgZoom;
+  // keep image centered
+  const dx = (CW - dw) / 2;
+  const dy = (CH - dh) / 2;
+  return { x: dx, y: dy, w: dw, h: dh };
+}
 
 function initCropBox() {
-  const margin = 24; // px margin inside preview
-  cropW = cropCanvas.width - margin * 2;
+  imgDraw = computeImgDraw();
+  // crop box size = a fraction of the canvas (80% of width)
+  const MARGIN = 0.1;
+  cropW = CW * (1 - MARGIN * 2);
   cropH = cropW / CROP_ASPECT;
-  // if height overflows, fit by height instead
-  if (cropH > cropCanvas.height - margin * 2) {
-    cropH = cropCanvas.height - margin * 2;
+  if (cropH > CH * (1 - MARGIN * 2)) {
+    cropH = CH * (1 - MARGIN * 2);
     cropW = cropH * CROP_ASPECT;
   }
-  cropX = (cropCanvas.width - cropW) / 2;
-  cropY = (cropCanvas.height - cropH) / 2;
+
+  // clamp crop box to image bounds
+  clampCropBox();
 }
 
-// Compute displayed image dimensions at current scale
-function getImgDraw() {
-  const imgAspect = currentImg.width / currentImg.height;
-  let baseW, baseH;
-  if (imgAspect > CROP_ASPECT) {
-    baseH = cropH; baseW = baseH * imgAspect;
-  } else {
-    baseW = cropW; baseH = baseW / imgAspect;
+function clampCropBox() {
+  imgDraw = computeImgDraw();
+  // keep crop box inside the visible image area
+  const minX = imgDraw.x;
+  const minY = imgDraw.y;
+  const maxX = imgDraw.x + imgDraw.w - cropW;
+  const maxY = imgDraw.y + imgDraw.h - cropH;
+
+  if (cropX === undefined) {
+    // initial center
+    cropX = (CW - cropW) / 2;
+    cropY = (CH - cropH) / 2;
   }
-  const dw = baseW * imgScale;
-  const dh = baseH * imgScale;
-  // clamp center so image always covers the crop box
-  const minCX = cropX + dw / 2;
-  const maxCX = cropX + cropW - dw / 2;
-  const minCY = cropY + dh / 2;
-  const maxCY = cropY + cropH - dh / 2;
-  const cx = dw >= cropW ? Math.max(minCX, Math.min(maxCX, imgCX)) : (cropX + cropW / 2);
-  const cy = dh >= cropH ? Math.max(minCY, Math.min(maxCY, imgCY)) : (cropY + cropH / 2);
-  return { cx, cy, dw, dh, x: cx - dw / 2, y: cy - dh / 2 };
+  cropX = Math.max(minX, Math.min(maxX, cropX));
+  cropY = Math.max(minY, Math.min(maxY, cropY));
 }
 
+// ── Drawing ───────────────────────────────────────────────────────
 function drawCrop() {
-  const W = cropCanvas.width, H = cropCanvas.height;
-  cCtx.clearRect(0, 0, W, H);
+  imgDraw = computeImgDraw();
+  clampCropBox();
 
-  const { x: ix, y: iy, dw, dh, cx, cy } = getImgDraw();
+  cCtx.clearRect(0, 0, CW, CH);
 
-  // Draw full image dimmed
+  // Full image dimmed
   cCtx.save();
   cCtx.globalAlpha = 0.35;
-  cCtx.drawImage(currentImg, ix, iy, dw, dh);
+  cCtx.drawImage(currentImg, imgDraw.x, imgDraw.y, imgDraw.w, imgDraw.h);
+  cCtx.globalAlpha = 1;
   cCtx.restore();
 
-  // Draw crop area bright (clip mask)
+  // Crop region bright (via clip)
   cCtx.save();
   cCtx.beginPath();
   cCtx.rect(cropX, cropY, cropW, cropH);
   cCtx.clip();
-  cCtx.drawImage(currentImg, ix, iy, dw, dh);
+  cCtx.drawImage(currentImg, imgDraw.x, imgDraw.y, imgDraw.w, imgDraw.h);
   cCtx.restore();
 
   // Crop border
@@ -95,42 +116,48 @@ function drawCrop() {
   cCtx.strokeStyle = 'rgba(74,159,219,0.65)';
   cCtx.lineWidth = 1;
   for (let i = 1; i < 3; i++) {
-    const gx = cropX + cropW * i / 3;
-    const gy = cropY + cropH * i / 3;
-    cCtx.beginPath(); cCtx.moveTo(gx, cropY); cCtx.lineTo(gx, cropY + cropH); cCtx.stroke();
-    cCtx.beginPath(); cCtx.moveTo(cropX, gy); cCtx.lineTo(cropX + cropW, gy); cCtx.stroke();
+    cCtx.beginPath();
+    cCtx.moveTo(cropX + cropW * i / 3, cropY);
+    cCtx.lineTo(cropX + cropW * i / 3, cropY + cropH);
+    cCtx.stroke();
+    cCtx.beginPath();
+    cCtx.moveTo(cropX, cropY + cropH * i / 3);
+    cCtx.lineTo(cropX + cropW, cropY + cropH * i / 3);
+    cCtx.stroke();
   }
 
-  // Corner handles
-  const R = 9;
-  const corners = [
-    [cropX, cropY], [cropX + cropW, cropY],
-    [cropX, cropY + cropH], [cropX + cropW, cropY + cropH]
+  // Thick corner L-brackets
+  const ARM = 20;
+  cCtx.strokeStyle = '#4A9FDB';
+  cCtx.lineWidth = 4;
+  const cns = [
+    [cropX, cropY, 1, 1],
+    [cropX + cropW, cropY, -1, 1],
+    [cropX, cropY + cropH, 1, -1],
+    [cropX + cropW, cropY + cropH, -1, -1],
   ];
-  cCtx.fillStyle = '#4A9FDB';
-  corners.forEach(([hx, hy]) => {
+  cns.forEach(([cx, cy, sx, sy]) => {
     cCtx.beginPath();
-    cCtx.arc(hx, hy, R, 0, Math.PI * 2);
-    cCtx.fill();
+    cCtx.moveTo(cx + sx * ARM, cy);
+    cCtx.lineTo(cx, cy);
+    cCtx.lineTo(cx, cy + sy * ARM);
+    cCtx.stroke();
   });
-
-  // Store clamped center for commit
-  imgCX = cx; imgCY = cy;
 }
 
-// ── Bake the crop selection into the output canvas ────────────────
+// ── Commit crop to output canvas ──────────────────────────────────
 function commitCrop() {
   if (!currentImg) return;
-  const { x: ix, y: iy, dw, dh } = getImgDraw();
   const { ctx } = elements;
   const yOffset = photoStage === 0 ? 0 : HALF;
 
-  // sx/sy in image coords corresponding to top-left of crop box
-  const scaleImgToCanvas = currentImg.width / dw;
-  const sx = (cropX - ix) * scaleImgToCanvas;
-  const sy = (cropY - iy) * scaleImgToCanvas;
-  const sw = cropW * scaleImgToCanvas;
-  const sh = cropH * scaleImgToCanvas;
+  // Map crop box position back to image source coords
+  const scaleX = currentImg.width / imgDraw.w;
+  const scaleY = currentImg.height / imgDraw.h;
+  const sx = (cropX - imgDraw.x) * scaleX;
+  const sy = (cropY - imgDraw.y) * scaleY;
+  const sw = cropW * scaleX;
+  const sh = cropH * scaleY;
 
   ctx.drawImage(currentImg, sx, sy, sw, sh, 0, yOffset, WIDTH, HALF);
   photoStage++;
@@ -144,19 +171,17 @@ function commitCrop() {
   }
 }
 
-// ── Overlay show / hide ───────────────────────────────────────────
+// ── Overlay ────────────────────────────────────────────────────────
 const cropOverlay = document.getElementById('cropOverlay');
 
 function showCropOverlay(img) {
   currentImg = img;
-  initCropBox();
-  // center image
-  imgCX = cropX + cropW / 2;
-  imgCY = cropY + cropH / 2;
-  imgScale = 1;
+  imgZoom = 1;
+  cropX = undefined; cropY = undefined;
   document.getElementById('zoomSlider').value = 1;
   document.getElementById('zoomLabel').textContent = '1.0×';
   cropOverlay.style.display = 'flex';
+  initCropBox();
   drawCrop();
 }
 function hideCropOverlay() {
@@ -164,10 +189,9 @@ function hideCropOverlay() {
   currentImg = null;
 }
 
-// ── Zoom slider ───────────────────────────────────────────────────
 document.getElementById('zoomSlider').addEventListener('input', e => {
-  imgScale = parseFloat(e.target.value);
-  document.getElementById('zoomLabel').textContent = imgScale.toFixed(1) + '×';
+  imgZoom = parseFloat(e.target.value);
+  document.getElementById('zoomLabel').textContent = imgZoom.toFixed(1) + '×';
   drawCrop();
 });
 
@@ -177,64 +201,77 @@ document.getElementById('cropCancel').addEventListener('click', () => {
   hideCropOverlay();
 });
 
-// ── Pointer events (drag to pan) ──────────────────────────────────
-function pointerPos(e) {
+// ── Drag events (move the crop box) ──────────────────────────────
+function getPos(e) {
   const rect = cropCanvas.getBoundingClientRect();
-  const scaleX = cropCanvas.width / rect.width;
-  const scaleY = cropCanvas.height / rect.height;
+  const scaleX = CW / rect.width;
+  const scaleY = CH / rect.height;
   const src = e.touches ? e.touches[0] : e;
   return {
     x: (src.clientX - rect.left) * scaleX,
-    y: (src.clientY - rect.top) * scaleY
+    y: (src.clientY - rect.top) * scaleY,
   };
 }
 
-cropCanvas.addEventListener('mousedown', e => { isDragging = true; lastTouch = pointerPos(e); });
+function isInsideCrop(pos) {
+  return pos.x >= cropX && pos.x <= cropX + cropW &&
+    pos.y >= cropY && pos.y <= cropY + cropH;
+}
+
+cropCanvas.addEventListener('mousedown', e => {
+  const pos = getPos(e);
+  isDragging = true;
+  dragStart = pos;
+  cropStart = { x: cropX, y: cropY };
+  e.preventDefault();
+});
+
 cropCanvas.addEventListener('touchstart', e => {
   if (e.touches.length === 2) {
     lastPinchDist = Math.hypot(
       e.touches[0].clientX - e.touches[1].clientX,
       e.touches[0].clientY - e.touches[1].clientY
     );
+    isDragging = false;
   } else {
-    isDragging = true; lastTouch = pointerPos(e);
+    const pos = getPos(e);
+    isDragging = true;
+    dragStart = pos;
+    cropStart = { x: cropX, y: cropY };
   }
   e.preventDefault();
 }, { passive: false });
 
-function onMove(pos) {
-  if (!isDragging || !lastTouch) return;
-  imgCX += pos.x - lastTouch.x;
-  imgCY += pos.y - lastTouch.y;
-  lastTouch = pos;
-  drawCrop();
-}
-
-cropCanvas.addEventListener('mousemove', e => onMove(pointerPos(e)));
-cropCanvas.addEventListener('touchmove', e => {
-  if (e.touches.length === 2) {
+function onMove(e) {
+  if (e.touches && e.touches.length === 2) {
     const dist = Math.hypot(
       e.touches[0].clientX - e.touches[1].clientX,
       e.touches[0].clientY - e.touches[1].clientY
     );
     if (lastPinchDist) {
-      const delta = dist / lastPinchDist;
-      imgScale = Math.max(1, Math.min(5, imgScale * delta));
-      document.getElementById('zoomSlider').value = imgScale;
-      document.getElementById('zoomLabel').textContent = imgScale.toFixed(1) + '×';
+      imgZoom = Math.max(1, Math.min(5, imgZoom * (dist / lastPinchDist)));
+      document.getElementById('zoomSlider').value = imgZoom;
+      document.getElementById('zoomLabel').textContent = imgZoom.toFixed(1) + '×';
       drawCrop();
     }
     lastPinchDist = dist;
-  } else {
-    onMove(pointerPos(e));
+    return;
   }
+  if (!isDragging || !dragStart) return;
+  const pos = getPos(e);
+  cropX = cropStart.x + (pos.x - dragStart.x);
+  cropY = cropStart.y + (pos.y - dragStart.y);
+  drawCrop();
   e.preventDefault();
-}, { passive: false });
+}
 
-window.addEventListener('mouseup', () => { isDragging = false; lastTouch = null; });
-window.addEventListener('touchend', () => { isDragging = false; lastTouch = null; lastPinchDist = null; });
+cropCanvas.addEventListener('mousemove', e => onMove(e));
+cropCanvas.addEventListener('touchmove', e => onMove(e), { passive: false });
 
-// ── Finalize photo strip ──────────────────────────────────────────
+window.addEventListener('mouseup', () => { isDragging = false; dragStart = null; });
+window.addEventListener('touchend', () => { isDragging = false; dragStart = null; lastPinchDist = null; });
+
+// ── Finalize ───────────────────────────────────────────────────────
 const finalizePhotoStrip = () => {
   const { ctx, readyBtn, uploadBtn } = elements;
   const frame = new Image();
@@ -247,15 +284,12 @@ const finalizePhotoStrip = () => {
   frame.src = 'Assets/fish-photobooth/camerapage/frame.png';
 };
 
-// ready → go to sticker page
 elements.readyBtn.addEventListener('click', () => {
   localStorage.setItem('photoStrip', elements.canvas.toDataURL('image/png'));
   window.location.href = 'final.html';
 });
 
-// upload button
 elements.uploadBtn.addEventListener('click', () => elements.uploadInput.click());
-
 elements.uploadInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -266,7 +300,6 @@ elements.uploadInput.addEventListener('change', e => {
   elements.uploadInput.value = '';
 });
 
-// logo redirect
 document.addEventListener('DOMContentLoaded', () => {
   const logo = document.querySelector('.logo');
   if (logo) logo.addEventListener('click', () => window.location.href = 'index.html');
