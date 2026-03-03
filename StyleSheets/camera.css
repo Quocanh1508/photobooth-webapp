@@ -147,6 +147,49 @@ button:hover {
   background-color: #FFF;
 }
 
+/* zoom control */
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-family: Castoro, serif;
+  font-size: 0.95rem;
+  color: var(--main-text, #555);
+}
+
+.zoom-control label {
+  white-space: nowrap;
+}
+
+#zoomSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 6px;
+  border-radius: 3px;
+  background: #2a4a53;
+  outline: none;
+  cursor: pointer;
+}
+
+#zoomSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #2a4a53;
+  cursor: pointer;
+}
+
+#zoomValue {
+  font-size: 0.85rem;
+  min-width: 2.5rem;
+  text-align: left;
+}
+
+
 /* bubble container */
 .bubble-container {
   position: absolute;

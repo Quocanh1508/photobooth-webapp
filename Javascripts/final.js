@@ -22,6 +22,8 @@ overlay.id = 'sticker-overlay';
 overlay.innerHTML = `
   <button id="rotateLeft"  title="Rotate Left">↺</button>
   <button id="rotateRight" title="Rotate Right">↻</button>
+  <button id="sizeDown" title="Shrink">➖</button>
+  <button id="sizeUp" title="Grow">➕</button>
   <button id="deleteSticker" title="Delete">🗑️</button>
 `;
 overlay.style.cssText = `
@@ -74,6 +76,28 @@ document.getElementById('deleteSticker').addEventListener('click', e => {
     selectedSticker = null;
     hideOverlay();
     drawCanvas();
+  }
+});
+document.getElementById('sizeUp').addEventListener('click', e => {
+  e.stopPropagation();
+  if (selectedSticker) {
+    const factor = 1.15;
+    selectedSticker.x -= (selectedSticker.width * (factor - 1)) / 2;
+    selectedSticker.y -= (selectedSticker.height * (factor - 1)) / 2;
+    selectedSticker.width *= factor;
+    selectedSticker.height *= factor;
+    drawCanvas(); showOverlay(selectedSticker);
+  }
+});
+document.getElementById('sizeDown').addEventListener('click', e => {
+  e.stopPropagation();
+  if (selectedSticker) {
+    const factor = 1 / 1.15;
+    selectedSticker.x -= (selectedSticker.width * (factor - 1)) / 2;
+    selectedSticker.y -= (selectedSticker.height * (factor - 1)) / 2;
+    selectedSticker.width *= factor;
+    selectedSticker.height *= factor;
+    drawCanvas(); showOverlay(selectedSticker);
   }
 });
 

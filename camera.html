@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera</title>
+  <title>QuocAnh's Booth – Camera</title>
 
   <!-- Favicon -->
   <link rel="icon" href="Assets/fish-photobooth/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" href="StyleSheets/camera.css" />
 </head>
+
 <body>
   <div class="logo">
     <img src="Assets/fish-photobooth/logo-new.png" alt="Logo">
@@ -23,10 +25,17 @@
 
   <div class="controls">
     <button id="takePhoto">Capture</button>
-    <button id="readyButton" disabled style="display: none;">Ready</button>
+  </div>
+
+  <!-- Zoom slider -->
+  <div class="zoom-control">
+    <label for="zoomSlider">🔍 Zoom</label>
+    <input type="range" id="zoomSlider" min="1" max="2.5" step="0.1" value="1" />
+    <span id="zoomValue">1.0×</span>
   </div>
 
   <script src="Javascripts/camera.js"></script>
   <script src="Javascripts/bubbles.js"></script>
 </body>
+
 </html>
