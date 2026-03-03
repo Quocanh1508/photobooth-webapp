@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Choose Theme</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="Assets/fish-photobooth/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="StyleSheets/home.css" />
+    <style>
+        .theme-selection-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .theme-selection-container h1 {
+            font-family: Castoro, serif;
+            color: var(--main-text);
+            font-weight: 400;
+        }
+
+        .theme-cards {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .theme-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 2px solid #1e1e1e;
+            width: 14rem;
+        }
+
+        .theme-card:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .theme-card h2 {
+            font-family: Castoro, serif;
+            font-size: 1.2rem;
+            color: var(--main-text);
+            margin: 0;
+        }
+
+        /* mobile */
+        @media (max-width: 768px) {
+            .theme-cards {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .theme-card {
+                width: 80vw;
+                max-width: 20rem;
+                flex-direction: row;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .theme-card img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo">
+        <img src="Assets/fish-photobooth/logo-new.png" alt="Logo">
+    </div>
+
+    <div class="theme-selection-container">
+        <h1>Choose your aesthetic</h1>
+
+        <div class="theme-cards">
+            <div class="theme-card" id="theme-underwater" onclick="selectTheme('underwater')">
+                <img src="Assets/fish-photobooth/homepage/goldfish.png" alt="Underwater Theme">
+                <h2>Underwater 🐠</h2>
+            </div>
+
+            <div class="theme-card" id="theme-japanese" onclick="selectTheme('japanese')">
+                <img src="Assets/japanese-theme/onigiri.png" alt="Japanese Theme">
+                <h2>Japanese 🌸</h2>
+            </div>
+        </div>
+    </div>
+
+    <script src="Javascripts/home.js"></script>
+    <script>
+        function selectTheme(theme) {
+            localStorage.setItem('photobooth_theme', theme);
+            window.location.href = 'menu.html';
+        }
+
+        // Quick apply theme color on this page
+        document.addEventListener('DOMContentLoaded', () => {
+            applyStoredTheme();
+        });
+    </script>
+</body>
+
+</html>
