@@ -232,19 +232,42 @@ addBubbleBtn.addEventListener('click', () => { addSticker(bubbleImages[bubbleInd
 // ── Controls ────────────────────────────────────────────────────────
 resetBtn.addEventListener('click', () => { stickers = []; selectedSticker = null; hideOverlay(); drawCanvas(); });
 
-downloadBtn.addEventListener('click', () => {
-  selectedSticker = null; hideOverlay(); drawCanvas();
-  setTimeout(() => {
-    canvas.toBlob(blob => {
+// mobile-aware download helper
+function downloadImage(canvasEl, filename) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    // iOS Safari ignores the `download` attribute — open in new tab so user can long-press to save
+    const dataUrl = canvasEl.toDataURL('image/png');
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(
+        `<html><body style="margin:0;background:#000;text-align:center">` +
+        `<p style="color:#fff;font-family:sans-serif;margin:12px">Hold the image and tap <b>Save Image</b></p>` +
+        `<img src="${dataUrl}" style="max-width:100%;display:block;margin:0 auto">` +
+        `</body></html>`
+      );
+      win.document.close();
+    } else {
+      // popup blocked – navigate directly to the image
+      window.location.href = dataUrl;
+    }
+  } else {
+    canvasEl.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'fish-photobooth.png';
+      a.href = url;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, 'image/png');
-  }, 80);
+  }
+}
+
+downloadBtn.addEventListener('click', () => {
+  selectedSticker = null; hideOverlay(); drawCanvas();
+  setTimeout(() => downloadImage(canvas, 'fish-photobooth.png'), 80);
 });
 
 homeBtn.addEventListener('click', () => window.location.href = 'index.html');
