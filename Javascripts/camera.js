@@ -68,6 +68,7 @@ const finalizePhotoStrip = () => {
   video.style.display = 'none';
   const frame = new Image();
   frame.src = 'Assets/fish-photobooth/camerapage/frame.png';
+
   frame.onload = () => {
     ctx.drawImage(frame, 0, 0, WIDTH, HEIGHT);
     localStorage.setItem('photoStrip', canvas.toDataURL('image/png'));
@@ -111,7 +112,10 @@ const setupEventListeners = () => {
 };
 
 // initialize photo booth
-const initPhotoBooth = () => { setupCamera(); setupEventListeners(); };
+const initPhotoBooth = () => {
+  setupCamera();
+  setupEventListeners();
+};
 initPhotoBooth();
 
 // logo redirect

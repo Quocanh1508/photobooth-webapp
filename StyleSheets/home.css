@@ -1,16 +1,35 @@
 /* root variables */
 :root {
-  --main-background: #f5f4f0;
-  --dark-green-theme: #2a4a53;
-  --main-text: #555555;
-  --white: #ffffff;
-
   --container-width: 500px;
   --container-aspect-ratio: 604 / 574;
 
   --fish-rotation: 7.52deg;
   --strip-rotation: 16.52deg;
   --bubble-rotation: -16.52deg;
+}
+
+/* Theme definitions */
+body.theme-underwater {
+  --main-background: #f5f4f0;
+  --dark-green-theme: #2a4a53;
+  --main-text: #555555;
+  --white: #ffffff;
+}
+
+body.theme-japanese {
+  /* Pastel beige/pink vibe */
+  --main-background: #FAF3F0;
+  --dark-green-theme: #D4A373;
+  --main-text: #8C5A4D;
+  --white: #ffffff;
+}
+
+/* Fallback if no theme is strictly applied */
+body {
+  --main-background: #f5f4f0;
+  --dark-green-theme: #2a4a53;
+  --main-text: #555555;
+  --white: #ffffff;
 }
 
 /* body */
@@ -22,6 +41,7 @@
 
 body {
   background-color: var(--main-background);
+  color: var(--main-text);
   display: flex;
   flex-direction: column;
   align-items: center;
