@@ -5,109 +5,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QuocAnh's Booth – Upload</title>
-
-  <!-- Favicon -->
   <link rel="icon" href="Assets/fish-photobooth/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" href="StyleSheets/camera.css" />
   <style>
-    /* hide actual file input */
     #uploadPhotoInput {
       display: none;
     }
 
-    /* Crop overlay backdrop */
+    /* ── Crop overlay ──────────────────────────────────── */
     #cropOverlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 500;
+      background: #111;
+      z-index: 600;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
-      padding: 1rem;
+      gap: 0;
     }
 
-    /* Preview canvas inside overlay */
-    #cropPreview {
-      width: min(90vw, 380px);
-      aspect-ratio: 588/735;
+    /* The interactive crop canvas */
+    #cropCanvas {
+      width: 100%;
+      max-width: 520px;
+      aspect-ratio: 520 / 600;
       height: auto;
-      border: 3px solid #fff;
-      border-radius: 0.5rem;
-      cursor: grab;
+      display: block;
       touch-action: none;
+      cursor: grab;
     }
 
-    #cropPreview:active {
+    #cropCanvas:active {
       cursor: grabbing;
     }
 
-    /* overlay controls bar */
-    .crop-controls {
+    /* Bottom controls bar */
+    .crop-bar {
+      width: 100%;
+      max-width: 520px;
+      background: #1a1a1a;
+      padding: 14px 20px 20px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      color: #fff;
-      font-family: Castoro, serif;
+      gap: 12px;
     }
 
     .crop-zoom-row {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 0.95rem;
+      gap: 10px;
+      color: #fff;
+      font-family: Castoro, serif;
+      font-size: 0.9rem;
     }
 
-    #cropZoomSlider {
+    #zoomSlider {
+      flex: 1;
       -webkit-appearance: none;
       appearance: none;
-      width: 160px;
-      height: 6px;
-      border-radius: 3px;
-      background: #fff;
+      height: 4px;
+      border-radius: 2px;
+      background: #444;
       outline: none;
       cursor: pointer;
     }
 
-    #cropZoomSlider::-webkit-slider-thumb {
+    #zoomSlider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: #2a4a53;
+      background: #4A9FDB;
       cursor: pointer;
     }
 
-    .crop-btn-row {
-      display: flex;
-      gap: 0.75rem;
+    #zoomLabel {
+      min-width: 3rem;
+      color: #aaa;
+      font-size: 0.8rem;
     }
 
-    .crop-btn-row button {
+    .crop-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .crop-actions button {
+      flex: 1;
+      padding: 12px;
       font-family: Castoro, serif;
       font-size: 1rem;
-      padding: 0.5rem 1.4rem;
-      border-radius: 0.5rem;
       border: none;
+      border-radius: 0.5rem;
       cursor: pointer;
-    }
-
-    #cropConfirm {
-      background: #2a4a53;
-      color: #fff;
     }
 
     #cropCancel {
-      background: #e0e0e0;
-      color: #333;
+      background: #333;
+      color: #ccc;
     }
 
-    .crop-hint {
-      font-size: 0.78rem;
-      color: rgba(255, 255, 255, 0.75);
+    #cropConfirm {
+      background: #4A9FDB;
+      color: #fff;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -129,17 +131,18 @@
     <button id="readyButton" disabled style="display:none;">Go Decorate →</button>
   </div>
 
-  <!-- Crop & Zoom overlay -->
+  <!-- ── Crop overlay ── -->
   <div id="cropOverlay">
-    <canvas id="cropPreview" width="588" height="735"></canvas>
-    <div class="crop-controls">
+    <!-- intrinsic size 520×600; JS will scale to match CROP_ASPECT per slot -->
+    <canvas id="cropCanvas" width="520" height="600"></canvas>
+
+    <div class="crop-bar">
       <div class="crop-zoom-row">
-        <span>🔍 Zoom</span>
-        <input type="range" id="cropZoomSlider" min="1" max="3" step="0.05" value="1" />
-        <span id="cropZoomValue">1.0×</span>
+        <span>🔍</span>
+        <input type="range" id="zoomSlider" min="1" max="5" step="0.05" value="1" />
+        <span id="zoomLabel">1.0×</span>
       </div>
-      <p class="crop-hint">Drag to reposition · Zoom to crop</p>
-      <div class="crop-btn-row">
+      <div class="crop-actions">
         <button id="cropCancel">Cancel</button>
         <button id="cropConfirm">✓ Use This</button>
       </div>
