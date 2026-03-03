@@ -232,42 +232,43 @@ addBubbleBtn.addEventListener('click', () => { addSticker(bubbleImages[bubbleInd
 // ── Controls ────────────────────────────────────────────────────────
 resetBtn.addEventListener('click', () => { stickers = []; selectedSticker = null; hideOverlay(); drawCanvas(); });
 
-// mobile-aware download helper
+// mobile-aware download helper (synchronous - preserves user gesture for Android)
 function downloadImage(canvasEl, filename) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const dataUrl = canvasEl.toDataURL('image/png');
+
   if (isIOS) {
-    // iOS Safari ignores the `download` attribute — open in new tab so user can long-press to save
-    const dataUrl = canvasEl.toDataURL('image/png');
+    // iOS Safari ignores `download` attr — open in new tab so user can long-press to save
     const win = window.open('', '_blank');
     if (win) {
       win.document.write(
-        `<html><body style="margin:0;background:#000;text-align:center">` +
-        `<p style="color:#fff;font-family:sans-serif;margin:12px">Hold the image and tap <b>Save Image</b></p>` +
+        `<html><body style="margin:0;background:#111;text-align:center">` +
+        `<p style="color:#fff;font-family:sans-serif;padding:12px">Hold the image → tap <b>Save Image</b></p>` +
         `<img src="${dataUrl}" style="max-width:100%;display:block;margin:0 auto">` +
         `</body></html>`
       );
       win.document.close();
     } else {
-      // popup blocked – navigate directly to the image
-      window.location.href = dataUrl;
+      window.location.href = dataUrl; // popup blocked fallback
     }
   } else {
-    canvasEl.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, 'image/png');
+    // Android Chrome + desktop: synchronous anchor click (preserves gesture context)
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 }
 
 downloadBtn.addEventListener('click', () => {
-  selectedSticker = null; hideOverlay(); drawCanvas();
-  setTimeout(() => downloadImage(canvas, 'fish-photobooth.png'), 80);
+  // deselect sticker so outline isn't baked in
+  selectedSticker = null;
+  hideOverlay();
+  drawCanvas();
+  // call synchronously — still within the click gesture context
+  downloadImage(canvas, 'fish-photobooth.png');
 });
 
 homeBtn.addEventListener('click', () => window.location.href = 'index.html');
