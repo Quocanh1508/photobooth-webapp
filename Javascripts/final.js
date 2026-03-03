@@ -233,19 +233,33 @@ addBubbleBtn.addEventListener('click', () => { addSticker(bubbleImages[bubbleInd
 resetBtn.addEventListener('click', () => { stickers = []; selectedSticker = null; hideOverlay(); drawCanvas(); });
 
 downloadBtn.addEventListener('click', () => {
-  // deselect so the dashed outline isn't baked in
   selectedSticker = null; hideOverlay(); drawCanvas();
   setTimeout(() => {
     canvas.toBlob(blob => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'fish-photobooth.png';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
     }, 'image/png');
-  }, 50);
+  }, 80);
 });
 
 homeBtn.addEventListener('click', () => window.location.href = 'index.html');
+
+// canvas view-zoom slider (display only, doesn't change exported image)
+const canvasZoomSlider = document.getElementById('canvasZoom');
+const canvasZoomValue = document.getElementById('canvasZoomValue');
+if (canvasZoomSlider) {
+  canvasZoomSlider.addEventListener('input', () => {
+    const scale = parseFloat(canvasZoomSlider.value);
+    canvas.style.transform = `scale(${scale})`;
+    canvas.style.transformOrigin = 'top center';
+    canvasZoomValue.textContent = scale.toFixed(2) + '×';
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const logo = document.querySelector('.logo');

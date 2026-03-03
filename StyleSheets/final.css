@@ -9,6 +9,47 @@ body {
   gap: 0;
 }
 
+/* zoom control (shared with camera page style) */
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: Castoro, serif;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.zoom-control label {
+  white-space: nowrap;
+}
+
+#canvasZoom {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: #2a4a53;
+  outline: none;
+  cursor: pointer;
+}
+
+#canvasZoom::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #2a4a53;
+  cursor: pointer;
+}
+
+#canvasZoomValue {
+  font-size: 0.8rem;
+  min-width: 2.5rem;
+}
+
+
 /* typography */
 h1 {
   color: #555555;

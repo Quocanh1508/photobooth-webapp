@@ -117,11 +117,13 @@ const setupEventListeners = () => {
     startCountdown(capturePhoto);
   });
 
-  // zoom slider
+  // zoom slider — update live preview AND capture zoom level
   if (zoomSlider) {
     zoomSlider.addEventListener('input', () => {
       zoomLevel = parseFloat(zoomSlider.value);
       document.getElementById('zoomValue').textContent = zoomLevel.toFixed(1) + '×';
+      // Apply zoom visually to live video (scaleX(-1) keeps the mirror, scale(zoom) zooms in)
+      elements.video.style.transform = `scaleX(-1) scale(${zoomLevel})`;
     });
   }
 
