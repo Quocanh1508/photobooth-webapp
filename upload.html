@@ -1,20 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload</title>
+  <title>QuocAnh's Booth – Upload</title>
 
   <!-- Favicon -->
   <link rel="icon" href="Assets/fish-photobooth/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" href="StyleSheets/camera.css" />
   <style>
-    /* hide the actual file input */
+    /* hide actual file input */
     #uploadPhotoInput {
       display: none;
     }
+
+    /* Crop overlay backdrop */
+    #cropOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 500;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    /* Preview canvas inside overlay */
+    #cropPreview {
+      width: min(90vw, 380px);
+      aspect-ratio: 588/735;
+      height: auto;
+      border: 3px solid #fff;
+      border-radius: 0.5rem;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #cropPreview:active {
+      cursor: grabbing;
+    }
+
+    /* overlay controls bar */
+    .crop-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      color: #fff;
+      font-family: Castoro, serif;
+    }
+
+    .crop-zoom-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    #cropZoomSlider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 160px;
+      height: 6px;
+      border-radius: 3px;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #cropZoomSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2a4a53;
+      cursor: pointer;
+    }
+
+    .crop-btn-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .crop-btn-row button {
+      font-family: Castoro, serif;
+      font-size: 1rem;
+      padding: 0.5rem 1.4rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    #cropConfirm {
+      background: #2a4a53;
+      color: #fff;
+    }
+
+    #cropCancel {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .crop-hint {
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.75);
+    }
   </style>
 </head>
+
 <body>
   <div class="logo">
     <img src="Assets/fish-photobooth/logo-new.png" alt="Logo">
@@ -23,19 +120,34 @@
   <div class="photobooth-container" id="booth">
     <div class="bubble-container"></div>
     <canvas id="finalCanvas" width="1176" height="1470"></canvas>
-
-    <!-- hidden file input -->
     <input type="file" id="uploadPhotoInput" accept="image/*" />
-
     <img class="frame-overlay" src="Assets/fish-photobooth/camerapage/frame.png" alt="frame overlay" />
   </div>
 
   <div class="controls">
-    <button id="uploadPhoto">Upload Photo</button>
-    <button id="readyButton" disabled style="display:none;">Ready</button>
+    <button id="uploadPhoto">Upload Photo 1</button>
+    <button id="readyButton" disabled style="display:none;">Go Decorate →</button>
+  </div>
+
+  <!-- Crop & Zoom overlay -->
+  <div id="cropOverlay">
+    <canvas id="cropPreview" width="588" height="735"></canvas>
+    <div class="crop-controls">
+      <div class="crop-zoom-row">
+        <span>🔍 Zoom</span>
+        <input type="range" id="cropZoomSlider" min="1" max="3" step="0.05" value="1" />
+        <span id="cropZoomValue">1.0×</span>
+      </div>
+      <p class="crop-hint">Drag to reposition · Zoom to crop</p>
+      <div class="crop-btn-row">
+        <button id="cropCancel">Cancel</button>
+        <button id="cropConfirm">✓ Use This</button>
+      </div>
+    </div>
   </div>
 
   <script src="Javascripts/upload.js"></script>
   <script src="Javascripts/bubbles.js"></script>
 </body>
+
 </html>
